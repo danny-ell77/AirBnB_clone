@@ -26,6 +26,8 @@ class FileStorage:
                 if json_string is not None and len(json_string) >= 1:
                     content = json.loads(json_string)
                     for key, value in content.items():
-                        self.__objects[key] = models.BaseModel(**value)
+                        class_name, _ = key.strip().split(".")
+                        class__ = models.model_factory.get(class_name)
+                        self.__objects[key] = class__(**value)
         except IOError:
             pass
