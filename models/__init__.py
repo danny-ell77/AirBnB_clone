@@ -7,7 +7,7 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 
-model_factory = {
+mapper = {
     "BaseModel": BaseModel,
     "User": User,
     "Amenity": Amenity,
@@ -16,6 +16,12 @@ model_factory = {
     "Review": Review,
     "State": State,
 }
+
+
+def model_factory(name, *args, **kwargs):
+    if class__ := mapper.get(name):
+        return class__(*args, **kwargs)
+
 
 storage = FileStorage()
 storage.reload()

@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""
+""" A module that contains the BaseModel Class
 """
 import copy
 from uuid import uuid4
@@ -8,10 +8,20 @@ import models
 
 
 class BaseModel:
-    """ """
+    """The Base Model that manages all the attributes for other models
+    Instance Attributes:
+        id (str) : an identifier for the model using uuid assigned when an instance is created
+        updated_at (datetime) : The date/time the model is updated
+        created_at (datetime) : The date/time the model is created
+    """
 
     def __init__(self, *args, **kwargs):
-        """ """
+        """Initializes the instance attributes
+        Args:
+            id (str) :
+            updated_at (datetime) : The date/time the model is updated
+            created_at (datetime) : The date/time the model is created
+        """
         if kwargs:
             for key, value in kwargs.items():
                 if key == "updated_at" or key == "created_at":
@@ -26,7 +36,7 @@ class BaseModel:
             models.storage.new(self)
 
     def __str__(self) -> str:
-        """ """
+        """A unique string representation for the class"""
         return f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}"
 
     def save(self):
