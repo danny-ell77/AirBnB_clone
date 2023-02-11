@@ -1,60 +1,100 @@
 #!/usr/bin/python3
-""""""
+"""Defines the HBnB console."""
+import re
 import cmd
 import models
 
 
 class HBNBCommand(cmd.Cmd):
+    """Defines the HolbertonBnB command interpreter.
+    Attributes:
+        prompt (str): The command prompt.
+    """
+
     prompt = "(hbnb) "
 
     def __init__(self, *args, **kwargs) -> None:
+        """Initializer for HBNBCommand"""
         super().__init__(*args, **kwargs)
 
         self.action_mapper = {
             "all": self.do_all,
             "count": self.do_count,
+            "show": self.do_show,
             "save": self.do_create,
             "update": self.do_update,
             "destroy": self.do_destroy,
         }
 
-    def parse_args(self, args):
+    def _parse_args(self, args):
+        """parse the args list into arguments"""
         class_name = args[0]
         instance_id = args[1] if len(args) > 1 else None
         attribute = args[2] if len(args) > 2 else None
         value = args[3] if len(args) > 3 else None
         return class_name, instance_id, attribute, value
 
-    def parse(self, line):
+    def _parse(self, line):
+        """split the line by spaces"""
         return line.strip().split(" ")
 
     def default(self, line: str) -> None:
-        args = line.strip().split(".", maxsplit=2)
-        class_name = args[0]
-        action = (
-            args[1][:-2] if len(args) > 1 else None
-        )  # use regex in case of parameters
-        command = self.action_mapper.get(action)
-        if command:
-            command(class_name)
+        """Default behavior for cmd module when input is invalid"""
+        identifier = ""
+        attrs = ""
+
+        class_name, *action = line.strip().split(".", maxsplit=2)
+        action = "".join(action)
+        command, *args = action.split("(")
+        args = "".join(args)
+
+        # Match pattern 1: (<id>)
+        pattern1 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*\)$")
+        # Match pattern 2: (<id>, <attribute name>, <attribute value>)
+        pattern2 = re.compile(
+            r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*,\s*\"(\w+)\",\s*\"(\w+)\"\)$"
+        )
+        # Match pattern 3: (<id>, <dictionary representation>)
+        pattern3 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\",\s*(\{.*\})\)$")
+        match = (
+            re.match(pattern1, args)
+            or re.match(pattern2, args)
+            or re.match(pattern3, args)
+        )
+        if match:
+            identifier = match.group(1)
+            attrs = " ".join(match.groups()[1:]) if match.lastindex > 1 else ""
+        elif args != ")":
+            print(f"*** Unknown syntax: {line}")
+            return
+
+        new_line = f"{class_name} {identifier} {attrs}"
+        if command := self.action_mapper.get(command):
+            command(new_line)
         else:
-            print("** command doesn't exist **")
+            print(f"*** Unknown syntax: {line}")
 
     def do_create(self, line):
-        args = self.parse(line)
-        class_name = self.parse_args(args)[0]
+        """Usage: create <class>
+        Create a new class instance and print its id.
+        """
+        args = self._parse(line)
+        class_name = self._parse_args(args)[0]
         if not class_name:
             print("** class name missing **")
-        elif class_name not in models.mapper.keys():
-            print("** class doesn't exist **")
-        else:
-            b = models.model_factory(class_name)
+        elif class__ := models.mapper.get(class_name):
+            b = class__()
             b.save()
             print(b.id)
+        else:
+            print("** class doesn't exist **")
 
     def do_show(self, line):
-        args = self.parse(line)
-        class_name, instance_id = self.parse_args(args)[:2]
+        """Usage: show <class> <id> or <class>.show(<id>)
+        Display the string representation of a class instance of a given id.
+        """
+        args = self._parse(line)
+        class_name, instance_id, _, _ = self._parse_args(args)
         if not class_name:
             print("** class name missing **")
         elif not instance_id:
@@ -70,8 +110,10 @@ class HBNBCommand(cmd.Cmd):
                 print("** no instance found **")
 
     def do_destroy(self, line):
-        args = self.parse(line)
-        class_name, instance_id = self.parse_args(args)[:2]
+        """Usage: destroy <class> <id> or <class>.destroy(<id>)
+        Delete a class instance of a given id."""
+        args = self._parse(line)
+        class_name, instance_id, _, _ = self._parse_args(args)
         if not class_name:
             print("** class name missing **")
         elif not instance_id:
@@ -87,12 +129,17 @@ class HBNBCommand(cmd.Cmd):
                 models.storage.save()
 
     def do_all(self, line):
-        args = self.parse(line)
-        class_name = self.parse_args(args)[0]
+        """Usage: all or all <class> or <class>.all()
+        Display string representations of all instances of a given class.
+        If no class is specified, displays all instantiated objects."""
+        from pprint import pprint
+
+        args = self._parse(line)
+        class_name = self._parse_args(args)[0]
         objs = models.storage.all()
         if class_name:
             if class_name in models.mapper.keys():
-                print(
+                pprint(
                     [
                         str(value)
                         for key, value in objs.items()
@@ -100,16 +147,39 @@ class HBNBCommand(cmd.Cmd):
                     ]
                 )
             else:
-                print("** class doesn't exist **")
+                pprint("** class doesn't exist **")
         else:
             print([str(obj) for obj in objs.values()])
 
-    def do_count(self):
-        ...
+    def do_count(self, line):
+        """Usage: count <class> or <class>.count()
+        Retrieve the number of instances of a given class."""
+        args = self._parse(line)
+        class_name = self._parse_args(args)[0]
+        objs = models.storage.all()
+        if not class_name:
+            print("** class name missing **")
+        elif class_name not in models.mapper.keys():
+            print("** class doesn't exist **")
+        else:
+            count = len(
+                [
+                    str(value)
+                    for key, value in objs.items()
+                    if class_name == key.split(".")[0]
+                ]
+            )
+            print(count)
 
     def do_update(self, line):
-        args = self.parse(line)
-        class_name, instance_id, attribute, value = self.parse_args(args)
+        """Usage: update <class> <id> <attribute_name> <attribute_value> or
+        <class>.update(<id>, <attribute_name>, <attribute_value>) or
+        <class>.update(<id>, <dictionary>)
+         Update a class instance of a given id by adding or updating
+         a given attribute key/value pair or dictionary."""
+        print(line)
+        args = self._parse(line)
+        class_name, instance_id, attribute, value = self._parse_args(args)
 
         if not class_name:
             print("** class name missing **")
@@ -119,28 +189,25 @@ class HBNBCommand(cmd.Cmd):
             print("** attribute name missing **")
         elif not value:
             print("** value missing **")
+        elif class_name not in models.mapper.keys():
+            print("** class doesn't exist **")
         else:
-            if class_name not in models.mapper.keys():
-                print("** class doesn't exist **")
+            objs = models.storage.all()
+            obj = objs.get(f"{class_name}.{instance_id}")
+            if obj:
+                attr_type = type(getattr(obj, attribute, None))
+                if attr_type in {int, str, float}:
+                    setattr(obj, attribute, attr_type(value))
+                obj.save()
             else:
-                objs = models.storage.all()
-                obj = objs.get(f"{class_name}.{instance_id}")
-                if obj:
-                    attr_type = type(getattr(obj, attribute, None))
-                    if attr_type in {int, str, float}:
-                        setattr(obj, attribute, attr_type(value))
-                    obj.save()
-                else:
-                    print("** no instance found **")
+                print("** no instance found **")
 
     def emptyline(self) -> bool:
+        """Do nothing upon receiving an empty line."""
         pass
 
-    def do_q(self, args):
-        self.do_quit(args)
-
     def do_quit(self, args):
-        """Quit the calculator"""
+        """Quit the program"""
         return True
 
     def do_EOF(self, args):
@@ -148,10 +215,32 @@ class HBNBCommand(cmd.Cmd):
         print("")
         return True
 
-    def do_help(self, line):
-        """Display custom help message"""
-        print("Type 'hello' to say hello, 'quit' to quit")
-
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
+
+
+#    def default(self, line: str) -> None:
+#         """Default behavior for cmd module when input is invalid"""
+#         class_name, action = line.strip().split(".", maxsplit=2)
+#         command, args = action.split("(")
+#         identifier, *other_args = args.split(",", maxsplit=1)
+#         identifier = identifier.split(")")[0].strip('"')
+#         other_args = "".join(other_args)
+#         print(identifier)
+#         attrs = ""
+#         # Match pattern 1: (<attribute name>, <attribute value>)
+#         pattern1 = re.compile(r"\s*\"(\w+)\",\s*\"(\w+)\"\s*\)$")
+#         # Match pattern 2: (<dictionary representation>)
+#         pattern2 = re.compile(r"\s*(\{.*\})\)")
+#         if match := re.match(pattern1, other_args):
+#             attrs = " ".join(match.groups())
+#         elif match := re.match(pattern2, other_args):
+#             print(" ".join(match.groups()))
+
+#         new_line = f"{class_name} {identifier} {attrs}"
+#         if command := self.action_mapper.get(command):
+#             command(new_line)
+#         else:
+#             print("here", action)
+#             print(f"*** Unknown syntax: {line}")

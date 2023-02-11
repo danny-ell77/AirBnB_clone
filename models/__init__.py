@@ -18,10 +18,5 @@ mapper = {
 }
 
 
-def model_factory(name, *args, **kwargs):
-    if class__ := mapper.get(name):
-        return class__(*args, **kwargs)
-
-
 storage = FileStorage()
 storage.reload()
