@@ -64,6 +64,7 @@ class HBNBCommand(cmd.Cmd):
         if match:
             identifier = match.group(1)
             attrs = " ".join(match.groups()[1:]) if match.lastindex > 1 else ""
+            print(attrs)
         elif args != ")":
             print(f"*** Unknown syntax: {line}")
             return
@@ -132,14 +133,13 @@ class HBNBCommand(cmd.Cmd):
         """Usage: all or all <class> or <class>.all()
         Display string representations of all instances of a given class.
         If no class is specified, displays all instantiated objects."""
-        from pprint import pprint
 
         args = self._parse(line)
         class_name = self._parse_args(args)[0]
         objs = models.storage.all()
         if class_name:
             if class_name in models.mapper.keys():
-                pprint(
+                print(
                     [
                         str(value)
                         for key, value in objs.items()
@@ -147,7 +147,7 @@ class HBNBCommand(cmd.Cmd):
                     ]
                 )
             else:
-                pprint("** class doesn't exist **")
+                print("** class doesn't exist **")
         else:
             print([str(obj) for obj in objs.values()])
 
@@ -177,7 +177,6 @@ class HBNBCommand(cmd.Cmd):
         <class>.update(<id>, <dictionary>)
          Update a class instance of a given id by adding or updating
          a given attribute key/value pair or dictionary."""
-        print(line)
         args = self._parse(line)
         class_name, instance_id, attribute, value = self._parse_args(args)
 
@@ -220,27 +219,48 @@ if __name__ == "__main__":
     HBNBCommand().cmdloop()
 
 
-#    def default(self, line: str) -> None:
-#         """Default behavior for cmd module when input is invalid"""
-#         class_name, action = line.strip().split(".", maxsplit=2)
-#         command, args = action.split("(")
-#         identifier, *other_args = args.split(",", maxsplit=1)
-#         identifier = identifier.split(")")[0].strip('"')
-#         other_args = "".join(other_args)
-#         print(identifier)
-#         attrs = ""
-#         # Match pattern 1: (<attribute name>, <attribute value>)
-#         pattern1 = re.compile(r"\s*\"(\w+)\",\s*\"(\w+)\"\s*\)$")
-#         # Match pattern 2: (<dictionary representation>)
-#         pattern2 = re.compile(r"\s*(\{.*\})\)")
-#         if match := re.match(pattern1, other_args):
-#             attrs = " ".join(match.groups())
-#         elif match := re.match(pattern2, other_args):
-#             print(" ".join(match.groups()))
+# def default(self, line: str) -> None:
+#     """Default behavior for cmd module when input is invalid"""
+#     identifier = ""
+#     attrs = ""
+#     value = ""
 
-#         new_line = f"{class_name} {identifier} {attrs}"
-#         if command := self.action_mapper.get(command):
-#             command(new_line)
-#         else:
-#             print("here", action)
-#             print(f"*** Unknown syntax: {line}")
+#     class_name, *action = line.strip().split(".", maxsplit=2)
+#     action = "".join(action)
+#     command, *args = action.split("(")
+#     args = "".join(args)
+
+#     # Match pattern 1: (<id>)
+#     pattern1 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*\)$")
+#     # Match pattern 2: (<id>, <attribute name>, <attribute value>)
+#     pattern2 = re.compile(
+#         r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*,\s*\"(\w+)\",\s*\"(\w+)\"\)$"
+#     )
+#     # Match pattern 3: (<id>, <dictionary representation>)
+#     pattern3 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\",\s*(\{.*\})\)$")
+#     match = (
+#         re.match(pattern1, args)
+#         or re.match(pattern2, args)
+#         or re.match(pattern3, args)
+#     )
+#     if match:
+#         identifier = match.group(1)
+#         attrs = " ".join(match.groups()[1:]) if match.lastindex > 1 else ""
+#         print(type(attrs))
+
+#         if attrs[0] == "{":
+#             try:
+#                 attrs_type = eval(attrs)
+#                 if type(attrs_type) is not dict:
+#                     raise Exception()
+#                 for key, value in attrs_type.items():
+#                     self._call_command(
+#                         line, command, class_name, identifier, key, value
+#                     )
+#             except Exception:
+#                 print(f"*** Unknown syntax: {line}")
+#                 return
+
+#     elif args != ")":
+#         print(f"*** Unknown syntax: {line}")
+#     self._call_command(line, command, class_name, identifier, attrs, value)
