@@ -3,6 +3,7 @@
 Contains the FileStorage class
 """
 import json
+
 import models
 
 
@@ -52,7 +53,5 @@ class FileStorage:
                         class_name, _ = key.strip().split(".")
                         class__ = models.mapper.get(class_name)
                         self.__objects[key] = class__(**value)
-                        # OR
-                        # self.__objects[key] = models.model_factory(class_name, **value)
         except IOError:
             pass

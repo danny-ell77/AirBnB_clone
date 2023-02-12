@@ -39,6 +39,25 @@ class HBNBCommand(cmd.Cmd):
         """split the line by spaces"""
         return line.strip().split(" ")
 
+    def _handle_update(self, line, command, class_name, identifier, attrs):
+        try:
+            attrs_parsed = eval(attrs)
+            if type(attrs_parsed) is not dict:
+                raise Exception()
+            for key, value in attrs_parsed.items():
+                self._call_command(
+                    line, command, class_name, identifier, attrs=f"{key} {value}"
+                )
+        except Exception:
+            print(f"*** Unknown syntax: {line}")
+
+    def _call_command(self, line, command, class_name, identifier, attrs):
+        new_line = f"{class_name} {identifier} {attrs}"
+        if command := self.action_mapper.get(command):
+            command(new_line)
+        else:
+            print(f"*** Unknown syntax: {line}")
+
     def default(self, line: str) -> None:
         """Default behavior for cmd module when input is invalid"""
         identifier = ""
@@ -53,7 +72,7 @@ class HBNBCommand(cmd.Cmd):
         pattern1 = re.compile(r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*\)$")
         # Match pattern 2: (<id>, <attribute name>, <attribute value>)
         pattern2 = re.compile(
-            r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*,\s*\"(\w+)\",\s*\"(\w+)\"\)$"
+            r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*,\s*\"(\w+)\",\s*\"*(\w+)\"*\)$"
         )
         # Match pattern 3: (<id>, <dictionary representation>)
         pattern3 = re.compile(r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*,\s*(\{.*\})\)$")
@@ -65,16 +84,14 @@ class HBNBCommand(cmd.Cmd):
         if match:
             identifier = match.group(1)
             attrs = " ".join(match.groups()[1:]) if match.lastindex > 1 else ""
-            print(attrs)
+            if len(attrs) > 0 and attrs[0] == "{":
+                return self._handle_update(
+                    line, command, class_name, identifier, attrs
+                )
         elif args != ")":
             print(f"*** Unknown syntax: {line}")
             return
-
-        new_line = f"{class_name} {identifier} {attrs}"
-        if command := self.action_mapper.get(command):
-            command(new_line)
-        else:
-            print(f"*** Unknown syntax: {line}")
+        self._call_command(line, command, class_name, identifier, attrs)
 
     def do_create(self, line):
         """Usage: create <class>
