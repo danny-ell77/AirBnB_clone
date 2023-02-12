@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 """Defines the HBnB console."""
-import re
 import cmd
+import re
+
 import models
 
 
@@ -49,13 +50,13 @@ class HBNBCommand(cmd.Cmd):
         args = "".join(args)
 
         # Match pattern 1: (<id>)
-        pattern1 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*\)$")
+        pattern1 = re.compile(r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*\)$")
         # Match pattern 2: (<id>, <attribute name>, <attribute value>)
         pattern2 = re.compile(
-            r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*,\s*\"(\w+)\",\s*\"(\w+)\"\)$"
+            r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*,\s*\"(\w+)\",\s*\"(\w+)\"\)$"
         )
         # Match pattern 3: (<id>, <dictionary representation>)
-        pattern3 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\",\s*(\{.*\})\)$")
+        pattern3 = re.compile(r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*,\s*(\{.*\})\)$")
         match = (
             re.match(pattern1, args)
             or re.match(pattern2, args)
@@ -98,10 +99,10 @@ class HBNBCommand(cmd.Cmd):
         class_name, instance_id, _, _ = self._parse_args(args)
         if not class_name:
             print("** class name missing **")
-        elif not instance_id:
-            print("** instance id missing **")
         elif class_name not in models.mapper.keys():
             print("** class doesn't exist **")
+        elif not instance_id:
+            print("** instance id missing **")
         else:
             objs = models.storage.all()
             obj = objs.get(f"{class_name}.{instance_id}")
@@ -117,10 +118,11 @@ class HBNBCommand(cmd.Cmd):
         class_name, instance_id, _, _ = self._parse_args(args)
         if not class_name:
             print("** class name missing **")
-        elif not instance_id:
-            print("** instance id missing **")
         elif class_name not in models.mapper.keys():
             print("** class doesn't exist **")
+        elif not instance_id:
+            print("** instance id missing **")
+
         else:
             objs = models.storage.all()
             obj = objs.pop(f"{class_name}.{instance_id}", None)
@@ -160,7 +162,7 @@ class HBNBCommand(cmd.Cmd):
         if not class_name:
             print("** class name missing **")
         elif class_name not in models.mapper.keys():
-            print("** class doesn't exist **")
+            print(0)
         else:
             count = len(
                 [
@@ -173,23 +175,23 @@ class HBNBCommand(cmd.Cmd):
 
     def do_update(self, line):
         """Usage: update <class> <id> <attribute_name> <attribute_value> or
-        <class>.update(<id>, <attribute_name>, <attribute_value>) or
-        <class>.update(<id>, <dictionary>)
-         Update a class instance of a given id by adding or updating
-         a given attribute key/value pair or dictionary."""
+       <class>.update(<id>, <attribute_name>, <attribute_value>) or
+       <class>.update(<id>, <dictionary>)
+        Update a class instance of a given id by adding or updating
+        a given attribute key/value pair or dictionary."""
         args = self._parse(line)
         class_name, instance_id, attribute, value = self._parse_args(args)
 
         if not class_name:
             print("** class name missing **")
+        elif class_name not in models.mapper.keys():
+            print("** class doesn't exist **")
         elif not instance_id:
             print("** instance id missing **")
         elif not attribute:
             print("** attribute name missing **")
         elif not value:
             print("** value missing **")
-        elif class_name not in models.mapper.keys():
-            print("** class doesn't exist **")
         else:
             objs = models.storage.all()
             obj = objs.get(f"{class_name}.{instance_id}")
@@ -206,11 +208,11 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_quit(self, args):
-        """Quit the program"""
+        """Quit command to exit the program."""
         return True
 
     def do_EOF(self, args):
-        """exit after an End of FIle"""
+        """EOF signal to exit the program."""
         print("")
         return True
 
