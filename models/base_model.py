@@ -2,15 +2,17 @@
 """ A module that contains the BaseModel Class
 """
 import copy
-from uuid import uuid4
 from datetime import datetime
+from uuid import uuid4
+
 import models
 
 
 class BaseModel:
     """The Base Model that manages all the attributes for other models
     Instance Attributes:
-        id (str) : an identifier for the model using uuid assigned when an instance is created
+        id (str) : an identifier for the model using uuid
+        assigned when an instance is created
         updated_at (datetime) : The date/time the model is updated
         created_at (datetime) : The date/time the model is created
     """
@@ -25,7 +27,11 @@ class BaseModel:
         if kwargs:
             for key, value in kwargs.items():
                 if key == "updated_at" or key == "created_at":
-                    setattr(self, key, datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
+                    setattr(
+                        self, key, datetime.strptime(
+                            value, "%Y-%m-%dT%H:%M:%S.%f"
+                        )
+                    )
                 elif key != "__class__":
                     setattr(self, key, value)
 
