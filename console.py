@@ -220,6 +220,15 @@ class HBNBCommand(cmd.Cmd):
             else:
                 print("** no instance found **")
 
+    def do_help(self, arg):
+        '''
+        Documented
+        commands(type help < topic >):
+        == == == == == == == == == == == == == == == == == == == ==
+        EOF help quit save show all destroy update count
+        '''
+        super().do_help(arg)
+
     def emptyline(self) -> bool:
         """Do nothing upon receiving an empty line."""
         pass
