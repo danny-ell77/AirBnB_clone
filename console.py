@@ -46,7 +46,11 @@ class HBNBCommand(cmd.Cmd):
                 raise Exception()
             for key, value in attrs_parsed.items():
                 self._call_command(
-                    line, command, class_name, identifier, attrs=f"{key} {value}"
+                    line,
+                    command,
+                    class_name,
+                    identifier,
+                    attrs=f"{key} {value}"
                 )
         except Exception:
             print(f"*** Unknown syntax: {line}")

@@ -4,6 +4,7 @@ import models
 
 
 class User(models.BaseModel):
+    age = 0
     email = ""
     password = ""
     first_name = ""
