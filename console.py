@@ -73,13 +73,13 @@ class HBNBCommand(cmd.Cmd):
         args = "".join(args)
 
         # Match pattern 1: (<id>)
-        pattern1 = re.compile(r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*\)$")
+        pattern1 = re.compile(r"\s*\"*([\w\s-]*)\"*\s*\)$")
         # Match pattern 2: (<id>, <attribute name>, <attribute value>)
         pattern2 = re.compile(
-            r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*\s*,\s*\"(\w+)\",\s*\"*(\w+)\"*\)$"
+            r"\s*\"*([\w\s-]*)\"*\s*,\s*\"(\w+)\",\s*\"*(\w+)\"*\)$"
         )
         # Match pattern 3: (<id>, <dictionary representation>)
-        pattern3 = re.compile(r"\s*\"*(\w+-\w+-\w+-\w+-\w+)\"*,\s*(\{.*\})\)$")
+        pattern3 = re.compile(r"\s*\"*([\w\s-]*)\"*,\s*(\{.*\})\)$")
         match = (
             re.match(pattern1, args)
             or re.match(pattern2, args)
@@ -118,6 +118,7 @@ class HBNBCommand(cmd.Cmd):
         """
         args = self._parse(line)
         class_name, instance_id, _, _ = self._parse_args(args)
+
         if not class_name:
             print("** class name missing **")
         elif class_name not in models.mapper.keys():
@@ -202,7 +203,6 @@ class HBNBCommand(cmd.Cmd):
         a given attribute key/value pair or dictionary."""
         args = self._parse(line)
         class_name, instance_id, attribute, value = self._parse_args(args)
-
         if not class_name:
             print("** class name missing **")
         elif class_name not in models.mapper.keys():
@@ -217,9 +217,9 @@ class HBNBCommand(cmd.Cmd):
             objs = models.storage.all()
             obj = objs.get(f"{class_name}.{instance_id}")
             if obj:
-                attr_type = type(getattr(obj, attribute, None))
-                if attr_type in {int, str, float}:
-                    setattr(obj, attribute, attr_type(value))
+                # attr_type = type(getattr(obj, attribute, None))
+                # if attr_type in {int, str, float}:
+                setattr(obj, attribute, value)
                 obj.save()
             else:
                 print("** no instance found **")
@@ -230,6 +230,7 @@ class HBNBCommand(cmd.Cmd):
         commands(type help < topic >):
         == == == == == == == == == == == == == == == == == == == ==
         EOF help quit save show all destroy update count
+
         '''
         super().do_help(arg)
 
@@ -249,50 +250,3 @@ class HBNBCommand(cmd.Cmd):
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
-
-
-# def default(self, line: str) -> None:
-#     """Default behavior for cmd module when input is invalid"""
-#     identifier = ""
-#     attrs = ""
-#     value = ""
-
-#     class_name, *action = line.strip().split(".", maxsplit=2)
-#     action = "".join(action)
-#     command, *args = action.split("(")
-#     args = "".join(args)
-
-#     # Match pattern 1: (<id>)
-#     pattern1 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*\)$")
-#     # Match pattern 2: (<id>, <attribute name>, <attribute value>)
-#     pattern2 = re.compile(
-#         r"\s*\"(\w+-\w+-\w+-\w+-\w+)\"\s*,\s*\"(\w+)\",\s*\"(\w+)\"\)$"
-#     )
-#     # Match pattern 3: (<id>, <dictionary representation>)
-#     pattern3 = re.compile(r"\s*\"(\w+-\w+-\w+-\w+-\w+)\",\s*(\{.*\})\)$")
-#     match = (
-#         re.match(pattern1, args)
-#         or re.match(pattern2, args)
-#         or re.match(pattern3, args)
-#     )
-#     if match:
-#         identifier = match.group(1)
-#         attrs = " ".join(match.groups()[1:]) if match.lastindex > 1 else ""
-#         print(type(attrs))
-
-#         if attrs[0] == "{":
-#             try:
-#                 attrs_type = eval(attrs)
-#                 if type(attrs_type) is not dict:
-#                     raise Exception()
-#                 for key, value in attrs_type.items():
-#                     self._call_command(
-#                         line, command, class_name, identifier, key, value
-#                     )
-#             except Exception:
-#                 print(f"*** Unknown syntax: {line}")
-#                 return
-
-#     elif args != ")":
-#         print(f"*** Unknown syntax: {line}")
-#     self._call_command(line, command, class_name, identifier, attrs, value)
